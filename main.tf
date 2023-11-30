@@ -60,14 +60,14 @@ resource "null_resource" "execute_command" {
       "sudo apt-get update",
       "sudo apt-get install -y docker.io",
       "sudo service docker start",
-			"sudo docker run -p 80:80 httpd" 
+			"sudo docker run -d -p 80:80 httpd" 
     ]
 
 		connection {
 			host     = vultr_instance.example_server.main_ip
 			type        = "ssh"
 			user        = "root"
-			private_key = file("/Users/sathiraumesh/Desktop/ss/example_rsa")  # Replace with the path to your SSH private key
+			private_key = file("example_rsa")  # Replace with the path to your SSH private key
 			timeout     = "2m"
 		}
 	}

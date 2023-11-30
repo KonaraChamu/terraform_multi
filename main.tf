@@ -60,7 +60,6 @@ resource "null_resource" "execute_command" {
       "sudo apt-get update",
       "sudo apt-get install -y docker.io",
       "sudo service docker start",
-			"sudo docker run -d -p 80:80 httpd" 
     ]
 
 		connection {
@@ -73,3 +72,37 @@ resource "null_resource" "execute_command" {
 	}
 }
 
+resource "null_resource" "mysql_container" {
+  depends_on = [null_resource.execute_command]
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo docker run --name mysql-db -e MYSQL_ROOT_PASSWORD=rootpassword -d mysql:latest"
+    ]
+
+    connection {
+      type        = "ssh"
+      host        = vultr_instance.example_server.main_ip
+      user        = "root"
+      private_key = file("example_rsa")
+    }
+  }
+}
+
+resource "null_resource" "wordpress_container" {
+  depends_on = [null_resource.mysql_container]
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo docker run --name wordpress-site -e WORDPRESS_DB_HOST=mysql-db -e WORDPRESS_DB_USER=root -e WORDPRESS_DB_PASSWORD=rootpassword -e WORDPRESS_DB_NAME=wordpress -p 8080:80 -d wordpress:latest",
+			"docker logs wordpress-site"
+    ]
+
+    connection {
+      type        = "ssh"
+      host        = vultr_instance.example_server.main_ip
+      user        = "root"
+      private_key = file("example_rsa")
+    }
+  }
+}
